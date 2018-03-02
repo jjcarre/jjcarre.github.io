@@ -165,7 +165,7 @@ function loadElection(year) {
 						return d3.geoPath().centroid(d)[0] + "px";
 					})
 					.html(s.State + "<br>"
-							 + s.Total_EV + "<br>"
+							 + s.Total_EV + " Electoral Votes<br>"
 							 +"<span class='dem'>" + s.D_Nominee + " " + s.D_Percentage + "% " + s.D_Votes + "</span><br>"
 							 +"<span class='rep'>" + s.R_Nominee + " " + s.R_Percentage + "% " + s.R_Votes + "</span>")
 					.style("top", function() {
