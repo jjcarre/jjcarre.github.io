@@ -100,7 +100,14 @@ function loadMap() {
 				return (d.PARTY == "D") ? "blue" : "red";
 			})
 			.on("click", function(d) {
-
+        d3.select("#yearTitle")
+        .transition()
+        .duration(500)
+        .style("width", "0px")
+        .transition()
+        .duration(500)
+        .text(d.YEAR)
+        .style("width", "100px");
 				loadElection(d.YEAR);
 			})
 
@@ -132,7 +139,7 @@ function loadMap() {
 
 			colorScale.call(d3.axisBottom(xScale)
 	    .tickSize(11)
-	    .tickFormat(function(x) { return  x + "%"; })
+	    .tickFormat(function(x) { return  Math.abs(x) + "%"; })
 	    .tickValues(color.domain()))
 	  .select(".domain")
 	    .remove();
@@ -155,21 +162,26 @@ function loadElection(year) {
 		stateResults.forEach(function(s) {
 
 			let state = d3.select("#" + s.Abbreviation);
-			state.transition().duration(400).attr("fill", function() { return color(s.D_Percentage - s.R_Percentage) });
+
+			state.transition()
+        .duration(500)
+        .ease(d3.easeCubic)
+        .attr("fill", function() { return color(s.D_Percentage - s.R_Percentage) });
+
 			state.on("mouseover", function(d) {
 				let div = d3.select(".tooltip");
 
 				div.classed("hidden", false)
 
 				div.style("left", function() {
-						return d3.geoPath().centroid(d)[0] + "px";
+						return d3.geoPath().centroid(d)[0] + $("svg").offset()["left"] + "px";
 					})
 					.html(s.State + "<br>"
 							 + s.Total_EV + " Electoral Votes<br>"
 							 +"<span class='dem'>" + s.D_Nominee + " " + s.D_Percentage + "% " + s.D_Votes + "</span><br>"
 							 +"<span class='rep'>" + s.R_Nominee + " " + s.R_Percentage + "% " + s.R_Votes + "</span>")
 					.style("top", function() {
-						return d3.geoPath().centroid(d)[1] + 40 + "px";
+						return d3.geoPath().centroid(d)[1] + 40 + $("svg").offset()["top"] + "px";
 					});
 
 				// Make sure the div fades in even if another state was just hovered
