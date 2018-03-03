@@ -50,10 +50,6 @@ g.years {
   position: absolute;
 }
 
-/* #title {
-  display: block;
-} */
-
 #yearTitle {
   display: inline-flex;
   max-width: 50px;
