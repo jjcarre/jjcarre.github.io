@@ -26,10 +26,6 @@ var color = d3.scaleThreshold()
 						.domain([ -40, -30, -20, -10, 0, 10, 20, 30, 40, ])
 						.range(d3.schemeRdBu[10]);
 
-// states whose labels need to be adjusted
-
-var coasts = ["MA", "RI", "DC", "DE"]
-
 loadMap();
 
 function loadMap() {
@@ -86,29 +82,22 @@ function loadMap() {
         .enter().append("text")
         .text(function(d) { return names[d.id] })
         .attr("x", function(d) {
-          let offset = 0;
-          if (coasts.includes(names[d.id])) {
-            offset = 40;
-          } else if( names[d.id] == "MI" ||  names[d.id] == "HI" || names[d.id] == "FL") {
-            offset = 17;
-          } else if( names[d.id] == "LA") {
-            offset = -8;
-          }
-          return path.centroid(d)[0] + offset;
+          return path.centroid(d)[0] + xOffset(names[d.id]);
         })
         .attr("y", function(d) {
-          let offset = 0;
-          if(names[d.id] == "NH") {
-            offset = 10
-          } else if (names[d.id] == "MI") {
-            offset = 30;
-          }
-
-          return path.centroid(d)[1] + offset;
+          return path.centroid(d)[1] + yOffset(names[d.id]);
         })
         .attr("text-anchor", "middle")
         .attr("id", function(d) { return "label" + names[d.id] })
         .style("pointer-events", "none");
+
+        g.append("rect")
+          .attr("id", "DC")
+          .attr("transform", "translate(-10,40)")
+          .attr("x", function() { return d3.select("#labelDC").attr("x"); })
+          .attr("y", function() { return (d3.select("#labelDC").attr("y")); })
+          .attr("width", 20)
+          .attr("height", 20);
 
       // Load the most recent election
 			loadElection("2016");
@@ -201,8 +190,51 @@ function loadMap() {
 	    .remove();
 }
 
+// Two functions for repositioning the state labels
 
-var prevYear = "2016";
+function yOffset(name) {
+  if(name == "NH") {
+    return  10
+  } else if (name == "MI") {
+    return  30;
+  } else if (name == "CT") {
+    return 4;
+  } else if (name == "RI") {
+    return 17;
+  } else if ( name == "DE") {
+    return 10;
+  } else if ( name == "NJ") {
+    return 7;
+  }
+  else {
+    return 0;
+  }
+}
+
+
+
+function xOffset(name) {
+  if (name == "MA") {
+    return 30;
+  } else if( name == "MI" ||  name == "HI" || name == "FL") {
+    return 17;
+  } else if( name == "LA") {
+    return -8;
+  } else if ( name == "VT") {
+    return -3;
+  } else if ( name == 'DE') {
+    return 23;
+  } else if ( name == "DC") {
+    return 100;
+  } else if ( name == "RI") {
+    return 14;
+  } else if ( name == "NJ") {
+    return 4;
+  } else {
+    return 0;
+  }
+}
+
 
 // Load the data for the selected Year
 
@@ -238,6 +270,21 @@ function loadElection(year) {
       .transition().duration(300).attr("opacity", 1);
   }
 
+// DC does not appear in the data until 1964
+
+  if(year < 1964) {
+    d3.select("#DC")
+      .attr("pointer-events", "none")
+      .transition().duration(300).attr("fill", "white");
+    d3.select("#labelDC")
+      .transition().duration(300).attr("opacity", 0);
+  } else {
+    d3.select("#DC")
+      .attr("pointer-events", "auto");
+    d3.select("#labelDC")
+      .transition().duration(300).attr("opacity", 1);
+  }
+
   prevYear = year;
 
 	d3.csv("data/election-results-" + year + ".csv", function(stateResults) {
@@ -246,12 +293,14 @@ function loadElection(year) {
 
 		stateResults.forEach(function(s) {
 
-			let state = d3.select("." + s.Abbreviation);
+      let state = d3.select("." + s.Abbreviation);
+
+      // DC is a special case
+      if (s.Abbreviation == "DC") {
+        state = d3.select("#" + s.Abbreviation);
+      }
 
       // calculate the new color using the votes rahter than the percentages
-      if (s.Abbreviation == 'AK') {
-        console.log(100 * ( (parseInt(s.D_Votes.replace(/,/g, "")) - parseInt(s.R_Votes.replace(/,/g, ""))) / (parseInt(s.D_Votes.replace(/,/g, "")) + parseInt(s.R_Votes.replace(/,/g, "")))))
-      }
 
 			state.transition()
         .duration(500)
@@ -265,15 +314,26 @@ function loadElection(year) {
 				let div = d3.select(".tooltip");
 
 				div.style("left", function() {
+          if (s.Abbreviation == "DC") {
+            return state.attr("x") + state.attr("width") / 2 + "px";
+          } else {
 						return d3.geoPath().centroid(d)[0] + $("svg").offset()["left"] + "px";
+          }
+			  })
+        .style("top", function() {
+          if (s.Abbreviation == "DC") {
+            console.log(parseInt($("svg").offset()["top"]))
+            console.log(state.attr("y") + state.attr("height") / 2)
+              return (parseInt(state.attr("y")) + parseInt(state.attr("height"))/2 + 40 + $("svg").offset()["top"]) + "px";
+          } else {
+					    return d3.geoPath().centroid(d)[1] + 40 + $("svg").offset()["top"] + "px";
+          }
 				})
 				.html(s.State + "<br>"
 							+ s.Total_EV + " Electoral Votes<br>"
 							+"<span class='dem'>" + s.D_Nominee + " " + s.D_Percentage + "% " + s.D_Votes + "</span><br>"
-							+"<span class='rep'>" + s.R_Nominee + " " + s.R_Percentage + "% " + s.R_Votes + "</span>")
-				.style("top", function() {
-					return d3.geoPath().centroid(d)[1] + 40 + $("svg").offset()["top"] + "px";
-				});
+							+"<span class='rep'>" + s.R_Nominee + " " + s.R_Percentage + "% " + s.R_Votes + "</span>");
+
 
 				// // Make sure the div fades in even if another state was just hovered
 
