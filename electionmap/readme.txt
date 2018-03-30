@@ -12,4 +12,5 @@ usually seemed to be on the order of 10.
 I implemented my tooltip to only display if a state is hovered for 200 ms, so that if the user runs their
 cursor over the map they do not see the tooltip pop-up partially over every state.
 
-Hawaii and Alaska were not states before 1960 so I did not display them in elections before that year.
+Hawaii and Alaska were not states before 1960 so I did not display them in elections before that year, and D.C. does
+not appear until the 1964 election.

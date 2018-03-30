@@ -1,0 +1,25 @@
+body {
+  padding: 5px
+}
+
+path {
+  stroke: black;
+}
+
+#dropdown {
+  display: inline-block;
+}
+
+#controls {
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+#languageList {
+  max-height: 300px;
+  overflow: scroll;
+}
+
+input[type=checkbox] {
+  margin-right: 10px;
+}
